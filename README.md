@@ -71,10 +71,10 @@ A comprehensive ASP.NET Core MVC web application for managing a restaurant's com
 
 ## 📸 Screenshots
 
-<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/20b4f43b-eb89-4c4b-a397-338297c44f5f" />
-<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/f3cdd2a8-432c-4915-acc7-d30752a9e825" />
-<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/3b0263ae-9355-4215-8ec4-36b6e448d636" />
-<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/b8d5fabf-592e-4c0b-98da-3b8a6a69f204" />
+<img width="1920" height="1011" alt="Image" src="https://github.com/user-attachments/assets/617f57ef-4a28-4127-8441-a2c4bef5cfc4" />
+<img width="1920" height="997" alt="Image" src="https://github.com/user-attachments/assets/6cac0530-1dee-4e9c-9c57-00e009a040db" />
+<img width="1920" height="1004" alt="Image" src="https://github.com/user-attachments/assets/2fd35171-0a95-411c-b4f3-fd869d18c4de" />
+<img width="1920" height="1021" alt="Image" src="https://github.com/user-attachments/assets/d76ed906-72a7-43f9-a81f-325b1bde756d" />
 
 ## 🏗️ Architecture
 
