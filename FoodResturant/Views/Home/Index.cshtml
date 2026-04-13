@@ -1,8 +1,571 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model IEnumerable<FoodResturant.Models.Product>
+
+@{
+    ViewData["Title"] = "Welcome to TacoTales";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<!-- ========== HERO SECTION ========== -->
+<div class="hero-section">
+    <div class="hero-badge">🌮 Fresh. Fast. Flavorful.</div>
+    <h1 class="hero-title">Welcome to <span class="hero-brand">TacoTales</span></h1>
+    <p class="hero-subtitle">
+        Manage your restaurant menu, track ingredients, and handle orders — all in one place.
+    </p>
+    <div class="hero-actions">
+        <a asp-controller="Product" asp-action="Index" class="btn btn-hero-primary">
+            Browse Menu
+        </a>
+        @if (User.Identity!.IsAuthenticated)
+        {
+            <a asp-controller="Order" asp-action="Create" class="btn btn-hero-secondary">
+                Create Order
+            </a>
+        }
+        else
+        {
+            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-hero-secondary">
+                Get Started
+            </a>
+        }
+    </div>
 </div>
+
+<!-- ========== STATS ROW ========== -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-number">5</div>
+        <div class="stat-label">Categories</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">Fresh Ingredients</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">Fast</div>
+        <div class="stat-label">Order Management</div>
+    </div>
+</div>
+
+<!-- ========== FEATURES SECTION ========== -->
+<section class="section-block">
+    <div class="section-label">Why TacoTales</div>
+    <h2 class="section-title">Everything your restaurant needs</h2>
+    <p class="section-sub">Built to make restaurant operations simple, fast, and efficient</p>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon" style="background:#fff3ee;">
+                <span>🍽️</span>
+            </div>
+            <h3>Menu Management</h3>
+            <p>Add, edit, and remove items with image uploads, pricing, and category organisation in real time.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:#edfaf3;">
+                <span>🥬</span>
+            </div>
+            <h3>Ingredient Tracking</h3>
+            <p>Monitor stock levels and link ingredients directly to menu items with many-to-many precision.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:#fff8ec;">
+                <span>🛒</span>
+            </div>
+            <h3>Smart Cart</h3>
+            <p>Session-based shopping cart with add, remove, and quantity updates — no login needed to browse.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:#fff3ee;">
+                <span>📋</span>
+            </div>
+            <h3>Order History</h3>
+            <p>Full order log per customer with detailed line items, totals, and order date tracking.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:#edfaf3;">
+                <span>🔐</span>
+            </div>
+            <h3>Secure Auth</h3>
+            <p>ASP.NET Identity powers secure registration, login, and role-based access for admin features.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon" style="background:#fff8ec;">
+                <span>📱</span>
+            </div>
+            <h3>Fully Responsive</h3>
+            <p>Bootstrap 5 ensures a seamless experience on desktop, tablet, and mobile devices.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ========== MENU PREVIEW SECTION ========== -->
+<section class="section-block">
+    <div class="section-label">Featured Items</div>
+    <h2 class="section-title">Popular menu picks</h2>
+    <p class="section-sub">A taste of what's waiting for you</p>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="menu-preview-grid">
+            @foreach (var product in Model.Take(3))
+            {
+                <div class="menu-card">
+                    <div class="menu-card-img">
+                        @if (!string.IsNullOrEmpty(product.ImageUrl))
+                        {
+                            <img src="@product.ImageUrl" alt="@product.Name" />
+                        }
+                        else
+                        {
+                            <div class="menu-card-placeholder">🌮</div>
+                        }
+                    </div>
+                    <div class="menu-card-body">
+                        <div class="menu-card-category">@product.Category?.Name</div>
+                        <h4 class="menu-card-name">@product.Name</h4>
+                        <p class="menu-card-desc">@product.Description</p>
+                        <div class="menu-card-footer">
+                            <span class="menu-card-price">@product.Price.ToString("C")</span>
+                            <a asp-controller="Product" asp-action="Details" asp-route-id="@product.ProductId"
+                               class="btn btn-menu-detail">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="view-all-wrap">
+            <a asp-controller="Product" asp-action="Index" class="btn btn-view-all">
+                View Full Menu &rarr;
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-icon">🌮</div>
+            <p>No menu items yet. <a asp-controller="Product" asp-action="AddEdit">Add your first item</a>.</p>
+        </div>
+    }
+</section>
+
+<!-- ========== CTA SECTION ========== -->
+@if (!User.Identity!.IsAuthenticated)
+{
+    <div class="cta-section">
+        <h2>Ready to get started?</h2>
+        <p>Create your account and start managing your restaurant today.</p>
+        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-cta">
+            Register Now — It's Free
+        </a>
+    </div>
+}
+
+<!-- ========== STYLES ========== -->
+<style>
+    /* --- Hero --- */
+    .hero-section {
+        background: #D85A30;
+        border-radius: 16px;
+        padding: 4rem 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .hero-badge {
+        display: inline-block;
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 6px 18px;
+        border-radius: 50px;
+        margin-bottom: 1.25rem;
+        letter-spacing: 0.03em;
+    }
+
+    .hero-title {
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 1rem;
+        line-height: 1.15;
+    }
+
+    .hero-brand {
+        color: #FFD8C8;
+    }
+
+    .hero-subtitle {
+        font-size: 1.1rem;
+        color: rgba(255,255,255,0.85);
+        max-width: 500px;
+        margin: 0 auto 2rem;
+        line-height: 1.6;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-hero-primary {
+        background: #fff;
+        color: #D85A30;
+        font-weight: 600;
+        padding: 12px 30px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-size: 15px;
+        transition: background 0.2s, transform 0.15s;
+        border: none;
+    }
+
+        .btn-hero-primary:hover {
+            background: #FFD8C8;
+            color: #993C1D;
+            transform: translateY(-1px);
+            text-decoration: none;
+        }
+
+    .btn-hero-secondary {
+        background: transparent;
+        color: #fff;
+        font-weight: 500;
+        padding: 12px 30px;
+        border-radius: 10px;
+        border: 2px solid rgba(255,255,255,0.6);
+        text-decoration: none;
+        font-size: 15px;
+        transition: border-color 0.2s, background 0.2s;
+    }
+
+        .btn-hero-secondary:hover {
+            border-color: #fff;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            text-decoration: none;
+        }
+
+    /* --- Stats --- */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+        background: #fff8f5;
+        border: 1px solid #fce0d5;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #D85A30;
+        line-height: 1;
+        margin-bottom: 6px;
+    }
+
+    .stat-label {
+        font-size: 13px;
+        color: #888;
+    }
+
+    /* --- Section common --- */
+    .section-block {
+        margin-bottom: 3rem;
+    }
+
+    .section-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #D85A30;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 6px;
+    }
+
+    .section-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 6px;
+    }
+
+    .section-sub {
+        font-size: 15px;
+        color: #666;
+        margin-bottom: 1.75rem;
+    }
+
+    /* --- Features --- */
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+
+    .feature-card {
+        background: #fff;
+        border: 1px solid #f0ece9;
+        border-radius: 14px;
+        padding: 1.25rem;
+        transition: border-color 0.2s, transform 0.2s;
+    }
+
+        .feature-card:hover {
+            border-color: #D85A30;
+            transform: translateY(-2px);
+        }
+
+    .feature-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        margin-bottom: 12px;
+    }
+
+    .feature-card h3 {
+        font-size: 15px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 6px;
+    }
+
+    .feature-card p {
+        font-size: 13px;
+        color: #666;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    /* --- Menu Preview --- */
+    .menu-preview-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .menu-card {
+        background: #fff;
+        border: 1px solid #f0ece9;
+        border-radius: 14px;
+        overflow: hidden;
+        transition: box-shadow 0.2s, transform 0.2s;
+    }
+
+        .menu-card:hover {
+            box-shadow: 0 4px 20px rgba(216,90,48,0.1);
+            transform: translateY(-2px);
+        }
+
+    .menu-card-img img {
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .menu-card-placeholder {
+        width: 100%;
+        height: 160px;
+        background: #fff3ee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+    }
+
+    .menu-card-body {
+        padding: 1rem 1.1rem;
+    }
+
+    .menu-card-category {
+        font-size: 11px;
+        font-weight: 600;
+        color: #D85A30;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 4px;
+    }
+
+    .menu-card-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 4px;
+    }
+
+    .menu-card-desc {
+        font-size: 13px;
+        color: #777;
+        margin-bottom: 12px;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .menu-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .menu-card-price {
+        font-size: 17px;
+        font-weight: 700;
+        color: #D85A30;
+    }
+
+    .btn-menu-detail {
+        font-size: 12px;
+        padding: 6px 14px;
+        background: #fff3ee;
+        color: #D85A30;
+        border: 1px solid #fce0d5;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+
+        .btn-menu-detail:hover {
+            background: #D85A30;
+            color: #fff;
+            text-decoration: none;
+        }
+
+    .view-all-wrap {
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .btn-view-all {
+        display: inline-block;
+        background: transparent;
+        color: #D85A30;
+        border: 2px solid #D85A30;
+        padding: 11px 28px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.2s, color 0.2s;
+    }
+
+        .btn-view-all:hover {
+            background: #D85A30;
+            color: #fff;
+            text-decoration: none;
+        }
+
+    /* --- Empty State --- */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: #fff8f5;
+        border-radius: 14px;
+        border: 1px dashed #fce0d5;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        color: #888;
+        font-size: 15px;
+    }
+
+    .empty-state a {
+        color: #D85A30;
+        font-weight: 600;
+    }
+
+    /* --- CTA --- */
+    .cta-section {
+        background: #4A1B0C;
+        border-radius: 16px;
+        padding: 3rem 2rem;
+        text-align: center;
+        margin-bottom: 2rem;
+        color: #fff;
+    }
+
+        .cta-section h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.75rem;
+        }
+
+        .cta-section p {
+            color: rgba(255,255,255,0.75);
+            font-size: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+    .btn-cta {
+        display: inline-block;
+        background: #D85A30;
+        color: #fff;
+        font-weight: 600;
+        padding: 13px 32px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-size: 15px;
+        transition: background 0.2s, transform 0.15s;
+    }
+
+        .btn-cta:hover {
+            background: #F0997B;
+            color: #fff;
+            transform: translateY(-1px);
+            text-decoration: none;
+        }
+
+    /* --- Responsive --- */
+    @@media (max-width: 768px) {
+        .hero-title {
+            font-size: 2rem;
+        }
+
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+
+        .features-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .menu-preview-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .features-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-section {
+            padding: 2.5rem 1.25rem;
+        }
+    }
+</style>
