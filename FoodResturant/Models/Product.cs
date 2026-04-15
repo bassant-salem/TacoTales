@@ -1,17 +1,16 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FoodResturant.Models
 {
     public class Product
     {
-        public Product() 
+        public Product()
         {
             ProductIngredients = new List<ProductIngredient>();
         }
+
         public int ProductId { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
@@ -19,20 +18,24 @@ namespace FoodResturant.Models
         public int Stock { get; set; }
         public int CategoryId { get; set; }
 
-        // property for image path 
+        // Image stored in database (survives redeploys)
+        public byte[]? ImageData { get; set; }
+        public string? ImageMimeType { get; set; }
+
+        // Keep this for reference/filename only
+        public string? ImageUrl { get; set; }
+
+        // Not saved to DB - just for upload form
         [NotMapped]
         public IFormFile? ImageFile { get; set; }
-        public string ImageUrl { get; set; } = "https://via.placeholder.com/150";
 
         [ValidateNever]
-        public Category? Category { get; set; } //A product belongs to a category
+        public Category? Category { get; set; }
 
         [ValidateNever]
-        public ICollection<OrderItem>? OrderItems { get; set; } //A product can be in many order items
+        public ICollection<OrderItem>? OrderItems { get; set; }
 
         [ValidateNever]
-        public ICollection<ProductIngredient>? ProductIngredients { get; set; } //A product can have many ingrediants
-
-
+        public ICollection<ProductIngredient>? ProductIngredients { get; set; }
     }
 }

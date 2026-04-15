@@ -111,9 +111,9 @@
             {
                 <div class="menu-card">
                     <div class="menu-card-img">
-                        @if (!string.IsNullOrEmpty(product.ImageUrl))
+                        @if (product.ImageData != null)
                         {
-                            <img src="@product.ImageUrl" alt="@product.Name" />
+                            <img src="@Url.Action("GetImage", "Product", new { id = product.ProductId })" alt="@product.Name" />
                         }
                         else
                         {
@@ -126,9 +126,9 @@
                         <p class="menu-card-desc">@product.Description</p>
                         <div class="menu-card-footer">
                             <span class="menu-card-price">@product.Price.ToString("C")</span>
-                            <a asp-controller="Product" asp-action="Details" asp-route-id="@product.ProductId"
+                            <a asp-controller="Product" asp-action="Index"
                                class="btn btn-menu-detail">
-                                View Details
+                                View Menu
                             </a>
                         </div>
                     </div>

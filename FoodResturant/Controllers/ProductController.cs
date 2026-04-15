@@ -25,6 +25,18 @@ namespace TequliasRestaurant.Controllers
             return View(await products.GetAllAsync());
         }
 
+        // ✅ New action to serve images from database
+        public async Task<IActionResult> GetImage(int id)
+        {
+            var product = await products.GetByIdAsync(id, new QueryOptions<Product>());
+            if (product?.ImageData == null)
+            {
+                // Return placeholder if no image
+                return Redirect("https://via.placeholder.com/150");
+            }
+            return File(product.ImageData, product.ImageMimeType ?? "image/jpeg");
+        }
+
         [HttpGet]
         public async Task<IActionResult> AddEdit(int id)
         {
@@ -53,30 +65,23 @@ namespace TequliasRestaurant.Controllers
             ViewBag.Categories = await categories.GetAllAsync();
             if (ModelState.IsValid)
             {
-
                 if (product.ImageFile != null)
                 {
-                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
-                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + product.ImageFile.FileName;
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await product.ImageFile.CopyToAsync(fileStream);
-                    }
-                    product.ImageUrl = uniqueFileName;
+                    // ✅ Save image to database instead of disk
+                    using var memoryStream = new MemoryStream();
+                    await product.ImageFile.CopyToAsync(memoryStream);
+                    product.ImageData = memoryStream.ToArray();
+                    product.ImageMimeType = product.ImageFile.ContentType;
+                    product.ImageUrl = product.ImageFile.FileName;
                 }
 
                 if (product.ProductId == 0)
                 {
-
                     product.CategoryId = catId;
-
-                    //add ingredients
                     foreach (int id in ingredientIds)
                     {
                         product.ProductIngredients?.Add(new ProductIngredient { IngredientId = id, ProductId = product.ProductId });
                     }
-
                     await products.AddAsync(product);
                     return RedirectToAction("Index", "Product");
                 }
@@ -87,8 +92,6 @@ namespace TequliasRestaurant.Controllers
                     if (existingProduct == null)
                     {
                         ModelState.AddModelError("", "Product not found.");
-                        ViewBag.Ingredients = await ingredients.GetAllAsync();
-                        ViewBag.Categories = await categories.GetAllAsync();
                         return View(product);
                     }
 
@@ -98,7 +101,14 @@ namespace TequliasRestaurant.Controllers
                     existingProduct.Stock = product.Stock;
                     existingProduct.CategoryId = catId;
 
-                    // Update product ingredients
+                    // ✅ Only update image if a new one was uploaded
+                    if (product.ImageFile != null)
+                    {
+                        existingProduct.ImageData = product.ImageData;
+                        existingProduct.ImageMimeType = product.ImageMimeType;
+                        existingProduct.ImageUrl = product.ImageUrl;
+                    }
+
                     existingProduct.ProductIngredients?.Clear();
                     foreach (int id in ingredientIds)
                     {
@@ -112,8 +122,6 @@ namespace TequliasRestaurant.Controllers
                     catch (Exception ex)
                     {
                         ModelState.AddModelError("", $"Error: {ex.GetBaseException().Message}");
-                        ViewBag.Ingredients = await ingredients.GetAllAsync();
-                        ViewBag.Categories = await categories.GetAllAsync();
                         return View(product);
                     }
                 }

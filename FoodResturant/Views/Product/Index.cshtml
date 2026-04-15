@@ -27,7 +27,9 @@
             <form asp-action="delete" asp-controller="product" method="post">
                 <input type="hidden" name="id" value="@prod.ProductId" />
                 <div class="card" style="width: 18rem;">
-                    <img src="~/images/@prod.ImageUrl" class="card-img-top fixed-image-height" alt="@prod.Description">
+                    <img src="@Url.Action("GetImage", "Product", new { id = prod.ProductId })"
+                         class="card-img-top fixed-image-height"
+                         alt="@prod.Description">
                     <div class="card-body">
                         <h5 class="card-title">@prod.Name</h5>
                         <p class="card-text">@prod.Description</p>
