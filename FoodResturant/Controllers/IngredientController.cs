@@ -38,6 +38,7 @@ namespace FoodResturant.Controllers
             if (ModelState.IsValid)
             {
                 await ingredients.AddAsync(ingredient);
+                TempData["Success"] = "Ingredient added successfully!";
                 return RedirectToAction("Index");
             }
             return View(ingredient);
@@ -56,6 +57,7 @@ namespace FoodResturant.Controllers
         public async Task<IActionResult> Delete(Ingredient ingredient)
         {
             await ingredients.DeleteAsync(ingredient.IngredientId);
+            TempData["Success"] = "Ingredient deleted successfully!";
             return RedirectToAction("Index");
         }
 
@@ -71,6 +73,7 @@ namespace FoodResturant.Controllers
             if (ModelState.IsValid) 
             {
                 await ingredients.UpdateAsync(ingredient);
+                TempData["Success"] = "Ingredient updated successfully!";
                 return RedirectToAction("Index");
             }
             return View(ingredient);

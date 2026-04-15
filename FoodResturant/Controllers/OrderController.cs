@@ -73,6 +73,7 @@ namespace FoodResturant.Controllers
             model.TotalAmount = model.OrderItems.Sum(oi => oi.Price * oi.Quantity);
             // Save the updated model back to session
             HttpContext.Session.Set("OrderViewModel", model);
+            TempData["Success"] = $"{product.Name} added to cart!";
             return RedirectToAction("Create", model);
         }
 
@@ -95,6 +96,8 @@ namespace FoodResturant.Controllers
             var model = HttpContext.Session.Get<OrderViewModel>("OrderViewModel");
             if (model == null || model.OrderItems.Count() == 0)
             {
+
+                TempData["Error"] = "Your cart is empty!";
                 return RedirectToAction("Create");
             }
             // create a new order
@@ -120,6 +123,7 @@ namespace FoodResturant.Controllers
             // Clear the session
             HttpContext.Session.Remove("OrderViewModel");
             // Redirect to a confirmation page or order history
+            TempData["Success"] = "Order placed successfully!";
             return RedirectToAction("ViewOrders");
         }
 

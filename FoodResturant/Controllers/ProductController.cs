@@ -83,6 +83,7 @@ namespace TequliasRestaurant.Controllers
                         product.ProductIngredients?.Add(new ProductIngredient { IngredientId = id, ProductId = product.ProductId });
                     }
                     await products.AddAsync(product);
+                    TempData["Success"] = "Product added successfully!";
                     return RedirectToAction("Index", "Product");
                 }
                 else
@@ -118,6 +119,7 @@ namespace TequliasRestaurant.Controllers
                     try
                     {
                         await products.UpdateAsync(existingProduct);
+                        TempData["Success"] = "Product updated successfully!";
                     }
                     catch (Exception ex)
                     {
@@ -135,6 +137,7 @@ namespace TequliasRestaurant.Controllers
             try
             {
                 await products.DeleteAsync(id);
+                TempData["Success"] = "Product deleted successfully!";
                 return RedirectToAction("Index");
             }
             catch
