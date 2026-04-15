@@ -3,61 +3,65 @@
     ViewBag.Title = "TacoTales Menu Items";
 }
 @functions {
-    string GetDeleteModalId(Product prod)
-    {
-        return "#deleteModal" + prod.ProductId;
-    }
-    string GetModalId(Product prod)
-    {
-        return "deleteModal" + prod.ProductId;
-    }
+    string GetDeleteModalId(Product prod) => "#deleteModal" + prod.ProductId;
+    string GetModalId(Product prod) => "deleteModal" + prod.ProductId;
 }
 
-<h2>TacoTales Menu Items</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">TacoTales Menu Items</h2>
+    @if (User.Identity!.IsAuthenticated && User.IsInRole("Admin"))
+    {
+        <a asp-action="AddEdit" asp-controller="Product" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Create New Item
+        </a>
+    }
+</div>
 
-@if (User.Identity!.IsAuthenticated && User.IsInRole("Admin"))
-{
-    <a asp-action="AddEdit" asp-controller="Product" class="btn btn-primary">Create New Item</a>
-}
-
-<div class="row">
+<div class="row row-cols-1 row-cols-md-3 g-4">
     @foreach (Product prod in Model)
     {
-        <div class="col-md-4">
+        <div class="col">
             <form asp-action="delete" asp-controller="product" method="post">
                 <input type="hidden" name="id" value="@prod.ProductId" />
-                <div class="card" style="width: 18rem;">
+                <div class="card h-100 shadow-sm">
                     <img src="@Url.Action("GetImage", "Product", new { id = prod.ProductId })"
-                         class="card-img-top fixed-image-height"
+                         class="card-img-top"
+                         style="height: 220px; object-fit: cover;"
                          alt="@prod.Description">
-                    <div class="card-body">
+                    <div class="card-body d-flex flex-column">
                         <h5 class="card-title">@prod.Name</h5>
-                        <p class="card-text">@prod.Description</p>
-                        <p class="card-text">@prod.Price.ToString("C")</p>
-                        <p class="card-text">Quantity In Stock: @prod.Stock</p>
-
-                        @if (User.Identity!.IsAuthenticated && User.IsInRole("Admin"))
-                        {
-                            <a class="btn btn-info" asp-controller="Product" asp-action="AddEdit" asp-route-id="@prod.ProductId">
-                                <i class="bi bi-pencil-fill">Edit</i>
-                            </a>
-                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="@GetDeleteModalId(prod)">
-                                <i class="bi bi-trash">Delete</i>
-                            </button>
-                        }
-
-                        <div class="modal fade" id="@GetModalId(prod)" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Are you sure you want to delete @prod.Name?</h1>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="btn btn-danger">Delete</button>
-                                    </div>
+                        <p class="card-text text-muted small">@prod.Description</p>
+                        <div class="mt-auto">
+                            <p class="card-text fw-bold text-danger fs-5 mb-1">@prod.Price.ToString("C")</p>
+                            <p class="card-text text-muted small mb-3">Stock: @prod.Stock</p>
+                            @if (User.Identity!.IsAuthenticated && User.IsInRole("Admin"))
+                            {
+                                <div class="d-flex gap-2">
+                                    <a class="btn btn-outline-secondary btn-sm" asp-controller="Product" asp-action="AddEdit" asp-route-id="@prod.ProductId">
+                                        <i class="bi bi-pencil-fill"></i> Edit
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="@GetDeleteModalId(prod)">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
                                 </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="@GetModalId(prod)" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Delete @prod.Name?</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                Are you sure you want to delete <strong>@prod.Name</strong>? This cannot be undone.
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger">Delete</button>
                             </div>
                         </div>
                     </div>
