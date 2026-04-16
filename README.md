@@ -8,10 +8,13 @@ TacoTales is a fictional restaurant platform that handles everything from menu b
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
+🌐 **Live Demo**: [tacotales.runasp.net](https://tacotales.runasp.net)
+
 ---
 
 ## 📋 Table of Contents
 
+- [Screenshots](#-screenshots)
 - [Features](#-features)
 - [Tech Stack](#️-tech-stack)
 - [Project Structure](#-project-structure)
@@ -21,7 +24,31 @@ TacoTales is a fictional restaurant platform that handles everything from menu b
 - [Security](#-security)
 - [Future Enhancements](#-future-enhancements)
 - [What I Learned](#-what-i-learned)
+- [Contact](#-contact)
 
+---
+
+## 📸 Screenshots
+
+### 🏠 Home Page
+![Home Page](screenshot-home.png)
+*Landing page with hero section, stats, and featured menu items.*
+
+### 🍽️ Menu Items
+![Menu Items](screenshot-menu.png)
+*Product catalog with images, descriptions, prices, and stock info.*
+
+### 🛒 Shopping Cart
+![Shopping Cart](screenshot-cart.png)
+*Session-based cart showing item quantities, prices, and order total.*
+
+### 📋 Order History
+![Order History](screenshot-orders.png)
+*Customer order log with itemized details and total amounts.*
+
+### ⚙️ Admin — Add Menu Item
+![Admin Panel](screenshot-admin.png)
+*Admin form for creating a new product with category and ingredient selection.*
 
 ---
 
@@ -283,3 +310,13 @@ This is a personal learning project, but suggestions are welcome!
 4. Push to the branch: `git push origin feature/your-feature`
 5. Open a Pull Request
 
+---
+
+## 📬 Contact
+
+**Bassant Salem**  
+GitHub: [@bassant-salem](https://github.com/bassant-salem)
+
+---
+
+*Built with ❤️ and 🌮 using ASP.NET Core*
