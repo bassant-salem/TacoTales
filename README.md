@@ -24,7 +24,7 @@ TacoTales is a fictional restaurant platform that handles everything from menu b
 - [Security](#-security)
 - [Future Enhancements](#-future-enhancements)
 - [What I Learned](#-what-i-learned)
-- [Contact](#-contact)
+
 
 ---
 
@@ -309,14 +309,3 @@ This is a personal learning project, but suggestions are welcome!
 3. Commit your changes: `git commit -m 'Add your feature'`
 4. Push to the branch: `git push origin feature/your-feature`
 5. Open a Pull Request
-
----
-
-## 📬 Contact
-
-**Bassant Salem**  
-GitHub: [@bassant-salem](https://github.com/bassant-salem)
-
----
-
-*Built with ❤️ and 🌮 using ASP.NET Core*
