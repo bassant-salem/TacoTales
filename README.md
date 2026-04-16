@@ -24,7 +24,7 @@ TacoTales is a fictional restaurant platform that handles everything from menu b
 - [Security](#-security)
 - [Future Enhancements](#-future-enhancements)
 - [What I Learned](#-what-i-learned)
-
+- [Contact](#-contact)
 
 ---
 
@@ -38,13 +38,21 @@ TacoTales is a fictional restaurant platform that handles everything from menu b
 ![Menu Items](screenshot-menu.png)
 *Product catalog with images, descriptions, prices, and stock info.*
 
-### 🛒 Shopping Cart
-![Shopping Cart](screenshot-cart.png)
-*Session-based cart showing item quantities, prices, and order total.*
+### 🛒 Create Order
+![Create Order](screenshot-create-order.png)
+*Order creation page — browse items and add quantities to cart.*
+
+### ✅ Add to Cart Notification
+![Add to Cart](screenshot-toast.png)
+*Real-time toast notification when an item is successfully added to cart.*
 
 ### 📋 Order History
-![Order History](screenshot-orders.png)
-*Customer order log with itemized details and total amounts.*
+![Order History](screenshot-order-history.png)
+*Customer order log with itemized details, dates, and totals. Includes order confirmation toast.*
+
+### 🥗 Admin — Ingredients List
+![Ingredients](screenshot-ingredients.png)
+*Admin view for managing ingredients with full CRUD operations.*
 
 ### ⚙️ Admin — Add Menu Item
 ![Admin Panel](screenshot-admin.png)
@@ -309,3 +317,14 @@ This is a personal learning project, but suggestions are welcome!
 3. Commit your changes: `git commit -m 'Add your feature'`
 4. Push to the branch: `git push origin feature/your-feature`
 5. Open a Pull Request
+
+---
+
+## 📬 Contact
+
+**Bassant Salem**  
+GitHub: [@bassant-salem](https://github.com/bassant-salem)
+
+---
+
+*Built with ❤️ and 🌮 using ASP.NET Core*
