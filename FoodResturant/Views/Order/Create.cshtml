@@ -2,24 +2,96 @@
 @{
     ViewBag.Title = "Create Order";
 }
-<h1>Create Order</h1>
-<div class="row">
-    @foreach (Product product in @Model.Products)
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">🌮 Our Menu</h1>
+
+    @* ── "Create Order" / Go to Cart CTA (top-right) ── *@
+    @if (Model.OrderItems != null && Model.OrderItems.Any())
     {
+        <a asp-action="Cart" class="btn btn-primary position-relative">
+            🛒 Create Order
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                @Model.OrderItems.Sum(i => i.Quantity)
+            </span>
+        </a>
+    }
+    else
+    {
+        <a asp-action="Cart" class="btn btn-outline-secondary disabled" aria-disabled="true">
+            🛒 Create Order
+        </a>
+    }
+</div>
+
+@* ── NO flash messages here — toasts in _Layout.cshtml handle them ── *@
+
+@* ── Product cards ── *@
+<div class="row g-4">
+    @foreach (Product product in Model.Products)
+    {
+        var inCart = Model.OrderItems?
+        .FirstOrDefault(i => i.ProductId == product.ProductId)
+        ?.Quantity ?? 0;
+
         <div class="col-md-4">
             <form asp-action="AddItem" method="post">
-                <div class="card" style="width: 18rem;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="prodId" value="@product.ProductId" />
+
+                <div class="card h-100 shadow-sm">
                     <img src="@Url.Action("GetImage", "Product", new { id = product.ProductId })"
-                         class="card-img-top fixed-image-height"
-                         alt="@product.Description">
-                    <div class="card-body">
-                        @product.Name - @product.Price.ToString("C")
-                        <input type="hidden" value="@product.ProductId" name="prodId" />
-                        <input type="number" name="prodQty" class="form-control" />
-                        <button class="btn btn-info" type="submit">Add</button>
+                         class="card-img-top"
+                         style="height:200px; object-fit:cover;"
+                         alt="@product.Name" />
+
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">@product.Name</h5>
+                        <p class="card-text text-muted small">@product.Description</p>
+
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold text-primary fs-5">
+                                    @product.Price.ToString("C")
+                                </span>
+                                @if (inCart > 0)
+                                {
+                                    <span class="badge bg-success">@inCart in cart</span>
+                                }
+                            </div>
+
+                            <div class="input-group">
+                                <input type="number"
+                                       name="prodQty"
+                                       value="1"
+                                       min="1"
+                                       max="99"
+                                       class="form-control"
+                                       aria-label="Quantity for @product.Name" />
+                                <button class="btn btn-info text-white" type="submit">
+                                    Add to Cart
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </form>
         </div>
     }
 </div>
+
+@* ── Sticky bottom bar only when cart has items ── *@
+@if (Model.OrderItems != null && Model.OrderItems.Any())
+{
+    <div class="fixed-bottom bg-white border-top shadow p-3 d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">
+            @Model.OrderItems.Sum(i => i.Quantity) item(s) —
+            <span class="text-primary">@Model.TotalAmount.ToString("C")</span>
+        </span>
+        <a asp-action="Cart" class="btn btn-primary">
+            Create Order →
+        </a>
+    </div>
+
+    <div style="height:80px"></div>
+}

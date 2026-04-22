@@ -1,0 +1,141 @@
+﻿@model IEnumerable<Order>
+@{
+    ViewData["Title"] = "Manage Orders";
+    var statusOptions = (OrderStatus[])ViewBag.StatusOptions;
+    var currentFilter = ViewBag.StatusFilter as string;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">🧾 Manage Orders</h1>
+    <span class="text-muted">@Model.Count() order(s) shown</span>
+</div>
+
+@* ── Status filter tabs ── *@
+<div class="mb-4">
+    <a asp-action="Index"
+       class="btn btn-sm @(currentFilter == null ? "btn-dark" : "btn-outline-dark") me-1">
+        All
+    </a>
+    @foreach (var status in statusOptions)
+    {
+        <a asp-action="Index" asp-route-statusFilter="@status"
+           class="btn btn-sm me-1
+                      @(currentFilter == status.ToString()
+                                 ? "btn-dark"
+                                 : "btn-outline-secondary")">
+        @GetStatusLabel(status)
+    </a>
+        }
+</div>
+
+@* ── Orders table ── *@
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No orders found for this filter.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Items</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model)
+                {
+                    <tr class="@(order.Status == OrderStatus.Cancelled ? "table-secondary" : "")">
+                        <td class="fw-semibold">#@order.OrderId</td>
+                        <td>
+                            <small class="text-muted">
+                                @(order.User?.Email ?? order.UserId)
+                            </small>
+                        </td>
+                        <td>
+                            <small>@order.OrderDate.ToString("MMM dd, yyyy")</small><br />
+                            <small class="text-muted">@order.OrderDate.ToString("hh:mm tt")</small>
+                        </td>
+                        <td>
+                            @foreach (var item in order.OrderItems.Take(2))
+                            {
+                                <small class="d-block">
+                                    @item.Quantity× @(item.Product?.Name ?? $"Product #{item.ProductId}")
+                                </small>
+                            }
+                            @if (order.OrderItems.Count > 2)
+                            {
+                                <small class="text-muted">
+                                    +@(order.OrderItems.Count - 2) more
+                                </small>
+                            }
+                        </td>
+                        <td class="text-end fw-semibold">@order.TotalAmount.ToString("C")</td>
+                        <td class="text-center">
+                            <span class="badge bg-@order.StatusBadgeClass() fs-6">
+                                @order.StatusLabel()
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-2 justify-content-center flex-wrap">
+
+                                @* ── Advance button ── *@
+                                @if (order.CanAdvance())
+                                {
+                                    <form asp-action="Advance" asp-route-id="@order.OrderId"
+                                          method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit"
+                                                class="btn btn-sm btn-primary"
+                                                title="Advance to @order.NextStatus()">
+                                            → @order.NextStatus()
+                                        </button>
+                                    </form>
+                                }
+
+                                @* ── Cancel button — only for Pending ── *@
+                                @if (order.CanCancel())
+                                {
+                                    <form asp-action="Cancel" asp-route-id="@order.OrderId"
+                                          method="post"
+                                          onsubmit="return confirm('Cancel order #@order.OrderId?')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            ✕ Cancel
+                                        </button>
+                                    </form>
+                                }
+
+                                @* ── Details link ── *@
+                                <a asp-action="Details" asp-route-id="@order.OrderId"
+                                   class="btn btn-sm btn-outline-secondary">
+                                    Details
+                                </a>
+
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@* ── Local helper ── *@
+@functions {
+    string GetStatusLabel(OrderStatus status) => status switch
+    {
+        OrderStatus.Pending => "⏳ Pending",
+        OrderStatus.Preparing => "👨‍🍳 Preparing",
+        OrderStatus.Ready => "✅ Ready",
+        OrderStatus.Delivered => "🎉 Delivered",
+        OrderStatus.Cancelled => "❌ Cancelled",
+        _ => status.ToString()
+    };
+}

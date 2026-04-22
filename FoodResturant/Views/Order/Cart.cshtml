@@ -1,37 +1,83 @@
 ﻿@model OrderViewModel
-<h1>My Cart</h1>
+@{
+    ViewBag.Title = "My Cart";
+}
 
-<form asp-action="PlaceOrder" method="post">
-    <h3>Order Items</h3>
-    <table class="table table-border">
-        <thead>
-            <tr>
-                <th>Product Name</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (int i = 0; i < Model.OrderItems.Count; i++)
-            {
-                <tr>
-                    <td>@Model.OrderItems[i].ProductName</td>
-                    <td>@Model.OrderItems[i].Quantity</td>
-                    <td>@Model.OrderItems[i].Price.ToString("C")</td>
-                    
-                </tr>
-            }
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td class="bg-primary bg-gradiant text-white fw-bold">@Model.TotalAmount.ToString("C") </td>
-            </tr>
-        </tbody>
-    </table>
-    <div class="form-group">
-        <input type="submit" value="Place Order" class="btn btn-primary" />
-    </div>
+<h1 class="mb-4">🛒 My Cart</h1>
 
-</form>
+@* ── NO inline alerts here — _Layout.cshtml toasts handle Success/Error/Warning ── *@
+
+<table class="table table-bordered align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>Product</th>
+            <th class="text-center" style="width:200px">Quantity</th>
+            <th class="text-end">Unit Price</th>
+            <th class="text-end">Subtotal</th>
+            <th class="text-center">Remove</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.OrderItems)
+        {
+            <tr>
+                <td>@item.ProductName</td>
+
+                @* ── Quantity update ── *@
+                <td class="text-center">
+                    <form asp-action="UpdateQuantity" method="post"
+                          class="d-flex align-items-center gap-1 justify-content-center">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="prodId" value="@item.ProductId" />
+                        <input type="number"
+                               name="prodQty"
+                               value="@item.Quantity"
+                               min="1"
+                               max="99"
+                               class="form-control form-control-sm text-center"
+                               style="width:70px" />
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                            Update
+                        </button>
+                    </form>
+                </td>
+
+                <td class="text-end">@item.Price.ToString("C")</td>
+                <td class="text-end fw-semibold">@((item.Price * item.Quantity).ToString("C"))</td>
+
+                @* ── Remove ── *@
+                <td class="text-center">
+                    <form asp-action="RemoveItem" method="post"
+                          onsubmit="return confirm('Remove @item.ProductName from cart?')">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="prodId" value="@item.ProductId" />
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            &times; Remove
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="3" class="text-end fw-bold">Order Total</td>
+            <td class="text-end fw-bold bg-primary bg-gradient text-white">
+                @Model.TotalAmount.ToString("C")
+            </td>
+            <td></td>
+        </tr>
+    </tfoot>
+</table>
+
+<div class="d-flex justify-content-between mt-3">
+    <a asp-action="Create" class="btn btn-outline-secondary">
+        ← Continue Shopping
+    </a>
+    <form asp-action="PlaceOrder" method="post">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-primary btn-lg">
+            Place Order 🌮
+        </button>
+    </form>
+</div>

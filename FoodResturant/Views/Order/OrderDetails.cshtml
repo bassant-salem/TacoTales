@@ -1,0 +1,104 @@
+﻿@model Order
+@{
+    ViewData["Title"] = "Order #" + Model.OrderId;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Order #@Model.OrderId</h1>
+    <a asp-action="ViewOrders" class="btn btn-outline-secondary">
+        ← Back to My Orders
+    </a>
+</div>
+
+@* ── Order summary card ── *@
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-dark text-white fw-semibold">
+        Order Summary
+    </div>
+    <div class="card-body row">
+        <div class="col-md-4">
+            <p class="mb-1 text-muted small">Order Date</p>
+            <p class="fw-semibold">@Model.OrderDate.ToString("dddd, MMMM dd yyyy — hh:mm tt")</p>
+        </div>
+        <div class="col-md-4">
+            <p class="mb-1 text-muted small">Placed By</p>
+            <p class="fw-semibold">@(Model.User?.Email ?? Model.UserId)</p>
+        </div>
+        <div class="col-md-4">
+            <p class="mb-1 text-muted small">Order Total</p>
+            <p class="fw-bold text-primary fs-5">@Model.TotalAmount.ToString("C")</p>
+        </div>
+    </div>
+</div>
+
+@* ── Order items table ── *@
+<div class="card shadow-sm">
+    <div class="card-header bg-dark text-white fw-semibold">
+        Items Ordered
+    </div>
+    <div class="card-body p-0">
+        @if (Model.OrderItems == null || !Model.OrderItems.Any())
+        {
+            <p class="text-muted p-4 mb-0">No items found for this order.</p>
+        }
+        else
+        {
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th class="text-center">Quantity</th>
+                        <th class="text-end">Unit Price</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.OrderItems)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    @if (item.Product != null)
+                                    {
+                                        <img src="@Url.Action("GetImage", "Product", new { id = item.ProductId })"
+                                             alt="@item.Product.Name"
+                                             class="rounded"
+                                             style="width:48px;height:48px;object-fit:cover;" />
+                                        <span class="fw-semibold">@item.Product.Name</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Product #@item.ProductId</span>
+                                    }
+                                </div>
+                            </td>
+                            <td class="text-center">@item.Quantity</td>
+                            <td class="text-end">@item.Price.ToString("C")</td>
+                            <td class="text-end fw-semibold">
+                                @((item.Price * item.Quantity).ToString("C"))
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" class="text-end fw-bold">Order Total</td>
+                        <td class="text-end fw-bold text-primary fs-5">
+                            @Model.TotalAmount.ToString("C")
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        }
+    </div>
+</div>
+
+@* ── Actions ── *@
+<div class="mt-4 d-flex gap-2">
+    <a asp-action="Create" class="btn btn-primary">
+        🌮 Order Again
+    </a>
+    <a asp-action="ViewOrders" class="btn btn-outline-secondary">
+        My Orders
+    </a>
+</div>
