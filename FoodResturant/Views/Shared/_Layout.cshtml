@@ -103,7 +103,7 @@
                         @* ── Admin-only links ── *@
                         @if (User.Identity!.IsAuthenticated && User.IsInRole("Admin"))
                         {
-                            // ... your existing admin links ...
+                           
                             <li class="nav-item">
                                 <a class="nav-link text-dark"
                                    asp-controller="AdminOrder"

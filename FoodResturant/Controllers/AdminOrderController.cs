@@ -6,10 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FoodResturant.Controllers
 {
-    /// <summary>
-    /// Admin-only controller for managing all customer orders.
-    /// Handles status advancement (state machine) and cancellation.
-    /// </summary>
+   
     [Authorize(Roles = "Admin")]
     public class AdminOrderController : Controller
     {
@@ -26,14 +23,10 @@ namespace FoodResturant.Controllers
             _logger = logger;
         }
 
-        // ─────────────────────────────────────────────
-        // GET /AdminOrder/Index — all orders dashboard
-        // ─────────────────────────────────────────────
         [HttpGet]
         public async Task<IActionResult> Index(string? statusFilter = null)
         {
-            // Use context directly so we can Include navigation properties
-            // (Repository.GetAllAsync has no overload for QueryOptions)
+            
             var query = _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(i => i.Product)
@@ -62,9 +55,7 @@ namespace FoodResturant.Controllers
             return View(orders);
         }
 
-        // ─────────────────────────────────────────────
-        // POST /AdminOrder/Advance/{id}
-        // ─────────────────────────────────────────────
+       
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Advance(int id)
@@ -112,9 +103,7 @@ namespace FoodResturant.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // ─────────────────────────────────────────────
-        // POST /AdminOrder/Cancel/{id}
-        // ─────────────────────────────────────────────
+      
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id)
@@ -158,9 +147,7 @@ namespace FoodResturant.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // ─────────────────────────────────────────────
-        // GET /AdminOrder/Details/{id}
-        // ─────────────────────────────────────────────
+      
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
