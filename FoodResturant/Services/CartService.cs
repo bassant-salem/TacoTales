@@ -4,9 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FoodResturant.Services
 {
-
-    // Handles all cart business logic: adding, updating, removing items,
-    
+   
     public class CartService
     {
         private const int MaxItemQty = 99;
@@ -28,10 +26,6 @@ namespace FoodResturant.Services
             _logger = logger;
         }
 
-        // SESSION KEY —  per user
-   
-        // Returns a session key unique to the current user.
-        
         private string CurrentCartKey()
         {
             var userId = _httpContextAccessor.HttpContext?.User?
@@ -47,6 +41,7 @@ namespace FoodResturant.Services
             return $"Cart_{userId}";
         }
 
+      
         public OrderViewModel GetCart()
         {
             var key = CurrentCartKey();
@@ -64,14 +59,14 @@ namespace FoodResturant.Services
             return cart;
         }
 
-        //Saves the cart back to session and recalculates the total.
+        
         private void SaveCart(OrderViewModel cart)
         {
             cart.TotalAmount = cart.OrderItems.Sum(i => i.Price * i.Quantity);
             Session.Set(CurrentCartKey(), cart);
         }
 
-        //Removes the cart from session entirely (after order placement)
+        
         public void ClearCart()
         {
             var key = CurrentCartKey();
@@ -79,7 +74,7 @@ namespace FoodResturant.Services
             _logger.LogInformation("Cart cleared for key {CartKey}.", key);
         }
 
-        //Returns true if the cart exists and has at least one item
+        
         public bool CartHasItems()
         {
             var cart = Session.Get<OrderViewModel>(CurrentCartKey());
@@ -87,11 +82,6 @@ namespace FoodResturant.Services
         }
 
        
-
-      
-        // Validates the product ID and quantity supplied by the user before
-       
-      
         public CartValidationResult ValidateAddInput(int prodId, int prodQty)
         {
             if (prodId <= 0)
@@ -117,8 +107,6 @@ namespace FoodResturant.Services
         }
 
        
-        // Validates a quantity update request.
-      
         public CartValidationResult ValidateUpdateInput(int prodId, int prodQty)
         {
             if (prodId <= 0)
@@ -127,7 +115,7 @@ namespace FoodResturant.Services
                 return CartValidationResult.Fail("Invalid product.");
             }
 
-            // 0 is valid (means "remove"), but negative or > 99 is not
+            
             if (prodQty < 0 || prodQty > MaxItemQty)
             {
                 _logger.LogWarning(
@@ -140,18 +128,13 @@ namespace FoodResturant.Services
         }
 
        
-        // CART OPERATIONS
-      
-
-    
         public async Task<CartValidationResult> AddItemAsync(int prodId, int prodQty, string userId)
         {
-            // 1. Input validation (no DB)
             var inputCheck = ValidateAddInput(prodId, prodQty);
             if (!inputCheck.IsValid)
                 return inputCheck;
 
-            // 2. DB existence check
+            
             Product? product;
             try
             {
@@ -173,15 +156,23 @@ namespace FoodResturant.Services
                 return CartValidationResult.Fail("That menu item no longer exists.");
             }
 
-            // 3. Load cart and apply changes
+            
+            if (product.Stock <= 0)
+            {
+                _logger.LogInformation(
+                    "AddItem blocked — {Name} is out of stock for user {UserId}.",
+                    product.Name, userId);
+                return CartValidationResult.Fail(
+                    $"Sorry, {product.Name} is currently out of stock.");
+            }
+
             var cart = GetCart();
 
             var existing = cart.OrderItems.FirstOrDefault(i => i.ProductId == prodId);
 
             if (existing != null)
             {
-                // ── Stale price detection ──
-                // If admin changed the price since item was added, update it and warn.
+                
                 if (existing.Price != product.Price)
                 {
                     _logger.LogInformation(
@@ -192,15 +183,23 @@ namespace FoodResturant.Services
                     existing.Price = product.Price;
                 }
 
-                // ── Quantity cap check ──
+                
                 var newQty = existing.Quantity + prodQty;
-                if (newQty > MaxItemQty)
+                if (newQty > product.Stock)
                 {
                     _logger.LogInformation(
-                        "AddItem capped — user {UserId} already has {Existing} of product {ProdId}; " +
-                        "adding {Add} would exceed {Max}.",
-                        userId, existing.Quantity, prodId, prodQty, MaxItemQty);
+                        "AddItem stock cap — user {UserId} tried {Add} of {Name} " +
+                        "but only {Stock} available ({Existing} already in cart).",
+                        userId, prodQty, product.Name, product.Stock, existing.Quantity);
 
+                    return CartValidationResult.Fail(
+                        $"Only {product.Stock} × {product.Name} in stock. " +
+                        $"You already have {existing.Quantity} in your cart.");
+                }
+
+               
+                if (newQty > MaxItemQty)
+                {
                     return CartValidationResult.Fail(
                         $"You already have {existing.Quantity} × {product.Name} in your cart. " +
                         $"Maximum per item is {MaxItemQty}.");
@@ -214,7 +213,7 @@ namespace FoodResturant.Services
             }
             else
             {
-                // ── Distinct-item cap ──
+                
                 if (cart.OrderItems.Count >= MaxCartItems)
                 {
                     _logger.LogInformation(
@@ -243,15 +242,15 @@ namespace FoodResturant.Services
             return CartValidationResult.Ok();
         }
 
-      
+     
         public CartValidationResult UpdateQuantity(int prodId, int prodQty, string userId)
         {
-            // 1. Input validation
+           
             var inputCheck = ValidateUpdateInput(prodId, prodQty);
             if (!inputCheck.IsValid)
                 return inputCheck;
 
-            // 2. Cart existence check
+            
             var cart = Session.Get<OrderViewModel>(CurrentCartKey());
             if (cart == null || !cart.OrderItems.Any())
             {
@@ -260,7 +259,7 @@ namespace FoodResturant.Services
                 return CartValidationResult.Fail("Your cart is empty.");
             }
 
-            // 3. Item existence check
+            
             var item = cart.OrderItems.FirstOrDefault(i => i.ProductId == prodId);
             if (item == null)
             {
@@ -289,7 +288,7 @@ namespace FoodResturant.Services
             return CartValidationResult.Ok();
         }
 
-        
+       
         public CartValidationResult RemoveItem(int prodId, string userId)
         {
             if (prodId <= 0)
@@ -303,7 +302,7 @@ namespace FoodResturant.Services
             var cart = Session.Get<OrderViewModel>(CurrentCartKey());
             if (cart == null)
             {
-                // Nothing to remove — treat as success (idempotent)
+                
                 _logger.LogDebug(
                     "RemoveItem — no cart in session for user {UserId}. No-op.", userId);
                 return CartValidationResult.Ok();
@@ -312,7 +311,7 @@ namespace FoodResturant.Services
             var item = cart.OrderItems.FirstOrDefault(i => i.ProductId == prodId);
             if (item == null)
             {
-                // Item already gone — idempotent success
+                
                 _logger.LogDebug(
                     "RemoveItem — product {ProdId} not found in cart for user {UserId}. No-op.",
                     prodId, userId);
@@ -330,8 +329,6 @@ namespace FoodResturant.Services
         }
 
         
-        // ORDER PLACEMENT
-       
 
         public class PlaceOrderResult
         {
@@ -341,12 +338,10 @@ namespace FoodResturant.Services
             public int OrderId { get; init; }
         }
 
-    
-        //Validates the cart, re-verifies every product against the DB,
-        
+       
         public async Task<PlaceOrderResult> PlaceOrderAsync(string userId)
         {
-            // 1. Cart must exist and have items
+           
             var cart = Session.Get<OrderViewModel>(CurrentCartKey());
             if (cart == null || !cart.OrderItems.Any())
             {
@@ -376,7 +371,7 @@ namespace FoodResturant.Services
 
                     if (product == null)
                     {
-                        // Product deleted since it was added — skip with warning
+                        
                         var msg = $"'{cartItem.ProductName}' is no longer available and was removed.";
                         warnings.Add(msg);
                         _logger.LogWarning(
@@ -386,7 +381,7 @@ namespace FoodResturant.Services
                         continue;
                     }
 
-                    // ── Final price-change detection at checkout ──
+                    
                     if (cartItem.Price != product.Price)
                     {
                         var msg = $"The price of '{product.Name}' changed from " +
@@ -403,11 +398,19 @@ namespace FoodResturant.Services
                     {
                         ProductId = cartItem.ProductId,
                         Quantity = cartItem.Quantity,
-                        Price = product.Price   // always snapshot DB price
+                        Price = product.Price   
                     });
+
+                   
+                    product.Stock -= cartItem.Quantity;
+                    if (product.Stock < 0) product.Stock = 0;
+                    _context.Products.Update(product);
+
+                    _logger.LogInformation(
+                        "Stock decremented — product {ProdId} ({Name}): -{Qty}, remaining {Stock}.",
+                        product.ProductId, product.Name, cartItem.Quantity, product.Stock);
                 }
 
-                // 2. All items were unavailable
                 if (!order.OrderItems.Any())
                 {
                     _logger.LogWarning(
@@ -424,14 +427,13 @@ namespace FoodResturant.Services
                     };
                 }
 
-                // 3. Calculate final total from DB-verified items
+                
                 order.TotalAmount = order.OrderItems.Sum(i => i.Price * i.Quantity);
 
-                // 4. Persist
                 await _context.Orders.AddAsync(order);
                 await _context.SaveChangesAsync();
 
-                // 5. Clear session cart
+               
                 ClearCart();
 
                 _logger.LogInformation(
@@ -467,6 +469,34 @@ namespace FoodResturant.Services
                     ErrorMessage = "An unexpected error occurred. Please try again."
                 };
             }
+        }
+
+        public async Task RestoreStockAsync(Order order, string cancelledBy)
+        {
+            foreach (var item in order.OrderItems)
+            {
+                var product = await _context.Products.FindAsync(item.ProductId);
+
+                if (product == null)
+                {
+                    _logger.LogWarning(
+                        "RestoreStock — product {ProdId} not found, skipping. Order {OrderId}.",
+                        item.ProductId, order.OrderId);
+                    continue;
+                }
+
+                var before = product.Stock;
+                product.Stock += item.Quantity;
+                _context.Products.Update(product);
+
+                _logger.LogInformation(
+                    "RestoreStock — product {ProdId} ({Name}): {Before} → {After}. " +
+                    "Order {OrderId} cancelled by {CancelledBy}.",
+                    product.ProductId, product.Name, before, product.Stock,
+                    order.OrderId, cancelledBy);
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }

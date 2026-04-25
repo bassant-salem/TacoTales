@@ -1,5 +1,6 @@
 ﻿using FoodResturant.Data;
 using FoodResturant.Models;
+using FoodResturant.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,28 +13,32 @@ namespace FoodResturant.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly Repository<Order> _orders;
+        private readonly CartService _cartService;
         private readonly ILogger<AdminOrderController> _logger;
 
         public AdminOrderController(
             ApplicationDbContext context,
+            CartService cartService,
             ILogger<AdminOrderController> logger)
         {
             _context = context;
             _orders = new Repository<Order>(context);
+            _cartService = cartService;
             _logger = logger;
         }
 
+     
         [HttpGet]
         public async Task<IActionResult> Index(string? statusFilter = null)
         {
-            
+           
             var query = _context.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(i => i.Product)
                 .Include(o => o.User)
                 .AsQueryable();
 
-            // Optional status filter
+          
             if (!string.IsNullOrEmpty(statusFilter) &&
                 Enum.TryParse<OrderStatus>(statusFilter, out var parsedStatus))
             {
@@ -42,7 +47,7 @@ namespace FoodResturant.Controllers
 
             var orders = await query.ToListAsync();
 
-            // Sort: active orders first, then by date descending
+            
             orders = orders
                 .OrderBy(o => o.Status == OrderStatus.Delivered ||
                                o.Status == OrderStatus.Cancelled ? 1 : 0)
@@ -131,6 +136,14 @@ namespace FoodResturant.Controllers
             try
             {
                 await _orders.UpdateAsync(order);
+
+                // Restore stock for all items in the cancelled order
+                var fullOrder = await _context.Orders
+                    .Include(o => o.OrderItems)
+                    .FirstOrDefaultAsync(o => o.OrderId == id);
+
+                if (fullOrder != null)
+                    await _cartService.RestoreStockAsync(fullOrder, "admin");
 
                 _logger.LogInformation("Order {OrderId} cancelled by admin.", id);
 

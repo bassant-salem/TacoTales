@@ -1,0 +1,207 @@
+﻿@model Order
+@{
+    ViewData["Title"] = "Order #" + Model.OrderId + " — Admin";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-0">Order #@Model.OrderId</h1>
+        <small class="text-muted">Admin View</small>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        ← Back to Orders
+    </a>
+</div>
+
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white fw-semibold d-flex justify-content-between">
+        <span>Order Status</span>
+        <span class="badge bg-@Model.StatusBadgeClass() fs-6">@Model.StatusLabel()</span>
+    </div>
+    <div class="card-body">
+
+        @if (Model.Status == OrderStatus.Cancelled)
+        {
+            <div class="alert alert-secondary mb-0">
+                ❌ This order was cancelled and cannot be advanced.
+            </div>
+        }
+        else
+        {
+            @* ── Visual stepper ── *@
+            <div class="d-flex align-items-center mb-4">
+                @{
+                    var steps = new[]
+                    {
+                        OrderStatus.Pending,
+                        OrderStatus.Preparing,
+                        OrderStatus.Ready,
+                        OrderStatus.Delivered
+                        };
+                }
+                @for (int i = 0; i < steps.Length; i++)
+                {
+                    var step = steps[i];
+                    var isPast = Model.Status > step;
+                    var isCurrent = Model.Status == step;
+                    var isFuture = Model.Status < step;
+
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <div class="d-flex flex-column align-items-center" style="min-width:80px">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                 style="width:42px; height:42px; font-size:14px;
+                                                background:@(isFuture ? "#e9ecef" : (isCurrent ? "#0d6efd" : "#198754"));
+                                                color:@(isFuture ? "#adb5bd" : "white");
+                                                border: 2px solid @(isCurrent ? "#0d6efd" : (isPast ? "#198754" : "#dee2e6"));
+                                                box-shadow: @(isCurrent ? "0 0 0 5px rgba(13,110,253,0.2)" : "none")">
+                                @if (isPast)
+                                {
+                                    <span>✓</span>
+                                }
+                                else
+                                {
+                                    <span>@(i + 1)</span>
+                                }
+                            </div>
+                            <small class="mt-1 text-center fw-semibold"
+                                   style="font-size:12px;
+                                                  color:@(isFuture ? "#adb5bd" : (isCurrent ? "#0d6efd" : "#198754"))">
+                                @step
+                            </small>
+                        </div>
+
+                        @if (i < steps.Length - 1)
+                        {
+                            <div class="flex-grow-1 mx-1"
+                                 style="height:3px; border-radius:2px;
+                                                    background:@(Model.Status > step ? "#198754" : "#dee2e6")">
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+           
+            <div class="d-flex gap-2">
+                @if (Model.CanAdvance())
+                {
+                    <form asp-controller="AdminOrder"
+                          asp-action="Advance"
+                          asp-route-id="@Model.OrderId"
+                          method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-primary">
+                            → Mark as @Model.NextStatus()
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <span class="text-muted fst-italic">
+                        This order has reached its final status.
+                    </span>
+                }
+
+                @if (Model.CanCancel())
+                {
+                    <form asp-controller="AdminOrder"
+                          asp-action="Cancel"
+                          asp-route-id="@Model.OrderId"
+                          method="post"
+                          onsubmit="return confirm('Cancel order #@Model.OrderId?')">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger">
+                            ✕ Cancel Order
+                        </button>
+                    </form>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white fw-semibold">Order Summary</div>
+    <div class="card-body row g-3">
+        <div class="col-md-3">
+            <p class="mb-1 text-muted small">Order ID</p>
+            <p class="fw-semibold">#@Model.OrderId</p>
+        </div>
+        <div class="col-md-3">
+            <p class="mb-1 text-muted small">Customer</p>
+            <p class="fw-semibold">@(Model.User?.Email ?? Model.UserId)</p>
+        </div>
+        <div class="col-md-3">
+            <p class="mb-1 text-muted small">Order Date</p>
+            <p class="fw-semibold">
+                @Model.OrderDate.ToString("MMM dd, yyyy")<br />
+                <small class="text-muted">@Model.OrderDate.ToString("hh:mm tt")</small>
+            </p>
+        </div>
+        <div class="col-md-3">
+            <p class="mb-1 text-muted small">Order Total</p>
+            <p class="fw-bold text-primary fs-5">@Model.TotalAmount.ToString("C")</p>
+        </div>
+    </div>
+</div>
+
+
+<div class="card shadow-sm">
+    <div class="card-header bg-dark text-white fw-semibold">Items Ordered</div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Product</th>
+                    <th class="text-center">Quantity</th>
+                    <th class="text-end">Unit Price</th>
+                    <th class="text-end">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.OrderItems)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                @if (item.Product != null)
+                                {
+                                    <img src="@Url.Action("GetImage", "Product", new { id = item.ProductId })"
+                                         alt="@item.Product.Name"
+                                         class="rounded"
+                                         style="width:48px;height:48px;object-fit:cover;" />
+                                    <span class="fw-semibold">@item.Product.Name</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Product #@item.ProductId</span>
+                                }
+                            </div>
+                        </td>
+                        <td class="text-center">@item.Quantity</td>
+                        <td class="text-end">@item.Price.ToString("C")</td>
+                        <td class="text-end fw-semibold">
+                            @((item.Price * item.Quantity).ToString("C"))
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="text-end fw-bold">Order Total</td>
+                    <td class="text-end fw-bold text-primary fs-5">
+                        @Model.TotalAmount.ToString("C")
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+
+<div class="mt-4 d-flex gap-2">
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        ← All Orders
+    </a>
+</div>

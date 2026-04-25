@@ -1,4 +1,5 @@
-﻿using FoodResturant.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using FoodResturant.Data;
 using FoodResturant.Models;
 using FoodResturant.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -7,11 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FoodResturant.Controllers
 {
-    // Thin HTTP layer — validates identity, calls CartService,
    
     [Authorize]
     public class OrderController : Controller
     {
+        private readonly ApplicationDbContext _context;
         private readonly CartService _cartService;
         private readonly Repository<Product> _products;
         private readonly Repository<Order> _orders;
@@ -24,6 +25,7 @@ namespace FoodResturant.Controllers
             UserManager<ApplicationUser> userManager,
             ILogger<OrderController> logger)
         {
+            _context = context;
             _cartService = cartService;
             _products = new Repository<Product>(context);
             _orders = new Repository<Order>(context);
@@ -31,23 +33,19 @@ namespace FoodResturant.Controllers
             _logger = logger;
         }
 
-    
-        // GET /Order/Create  — menu page
-     
+      
         [HttpGet]
         public async Task<IActionResult> Create()
         {
             var cart = _cartService.GetCart();
 
-            // Always refresh the product list from DB
+            
             cart.Products = await _products.GetAllAsync();
 
             return View(cart);
         }
 
-      
-        // POST /Order/AddItem
-       
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddItem(int prodId, int prodQty)
@@ -62,17 +60,14 @@ namespace FoodResturant.Controllers
                 return RedirectToAction(nameof(Create));
             }
 
-            // Fetch product name for the success toast
-            // (CartService already validated it exists, so FindAsync won't be null here)
+            
             var product = await _products.GetByIdAsync(prodId, new QueryOptions<Product>());
             TempData["Success"] = $"{product?.Name ?? "Item"} added to cart!";
 
             return RedirectToAction(nameof(Create));
         }
 
-      
-        // POST /Order/UpdateQuantity
-       
+     
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult UpdateQuantity(int prodId, int prodQty)
@@ -95,8 +90,7 @@ namespace FoodResturant.Controllers
             return RedirectToAction(nameof(Cart));
         }
 
-        // POST /Order/RemoveItem
-      
+       
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult RemoveItem(int prodId)
@@ -120,15 +114,12 @@ namespace FoodResturant.Controllers
                 : RedirectToAction(nameof(Create));
         }
 
-    
-        // GET /Order/Cart
-   
+       
         [HttpGet]
         public IActionResult Cart()
         {
             if (!_cartService.CartHasItems())
             {
-                // Silent redirect — no error toast for navbar click on empty cart
                 return RedirectToAction(nameof(Create));
             }
 
@@ -136,9 +127,7 @@ namespace FoodResturant.Controllers
             return View(cart);
         }
 
- 
-        // POST /Order/PlaceOrder
-       
+      
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PlaceOrder()
@@ -161,7 +150,7 @@ namespace FoodResturant.Controllers
                     result.ErrorMessage.Contains("empty") ? nameof(Create) : nameof(Cart));
             }
 
-            // Partial success — some items were unavailable
+            
             if (result.Warnings.Any())
                 TempData["Warning"] = string.Join(" ", result.Warnings);
 
@@ -170,8 +159,6 @@ namespace FoodResturant.Controllers
         }
 
      
-        // GET /Order/ViewOrders
-    
         [HttpGet]
         public async Task<IActionResult> ViewOrders()
         {
@@ -186,9 +173,71 @@ namespace FoodResturant.Controllers
             return View(orders);
         }
 
-        
-        // GET /Order/OrderDetails/{id}
       
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelOrder(int id)
+        {
+            if (id <= 0)
+                return BadRequest();
+
+            var userId = _userManager.GetUserId(User);
+
+            
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.OrderId == id);
+
+            if (order == null)
+                return NotFound();
+
+         
+            if (order.UserId != userId)
+            {
+                _logger.LogWarning(
+                    "CancelOrder — user {UserId} attempted to cancel order {OrderId} " +
+                    "belonging to user {OwnerId}.",
+                    userId, id, order.UserId);
+                return Forbid();
+            }
+
+           
+            if (!order.CanCancel())
+            {
+                _logger.LogWarning(
+                    "CancelOrder blocked — order {OrderId} is {Status}, not Pending.",
+                    id, order.Status);
+                TempData["Error"] =
+                    $"Order #{id} cannot be cancelled — it is already {order.StatusLabel()}.";
+                return RedirectToAction(nameof(ViewOrders));
+            }
+
+            order.Status = OrderStatus.Cancelled;
+
+            try
+            {
+                await _orders.UpdateAsync(order);
+
+                
+                await _cartService.RestoreStockAsync(order, userId!);
+
+                _logger.LogInformation(
+                    "Order {OrderId} cancelled by user {UserId}.", id, userId);
+
+                TempData["Success"] = $"Order #{id} has been cancelled and stock restored.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to cancel order {OrderId} for user {UserId}.", id, userId);
+                TempData["Error"] =
+                    "Something went wrong cancelling your order. Please try again.";
+            }
+
+            return RedirectToAction(nameof(ViewOrders));
+        }
+
+       
         [HttpGet]
         public async Task<IActionResult> OrderDetails(int id)
         {
@@ -206,7 +255,7 @@ namespace FoodResturant.Controllers
             if (order == null)
                 return NotFound();
 
-            // Prevent users from viewing each other's orders
+            
             if (order.UserId != userId)
             {
                 _logger.LogWarning(

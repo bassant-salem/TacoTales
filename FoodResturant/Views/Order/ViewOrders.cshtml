@@ -141,6 +141,19 @@ else
                                     🌮 Order Again
                                 </a>
                             }
+                            @if (order.CanCancel())
+                            {
+                                <form asp-controller="Order"
+                                      asp-action="CancelOrder"
+                                      asp-route-id="@order.OrderId"
+                                      method="post"
+                                      onsubmit="return confirm('Cancel order #@order.OrderId? This cannot be undone.')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        ✕ Cancel
+                                    </button>
+                                </form>
+                            }
                         </div>
                     </div>
 

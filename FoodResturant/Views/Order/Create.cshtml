@@ -6,7 +6,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="mb-0">🌮 Our Menu</h1>
 
-    @* ── "Create Order" / Go to Cart CTA (top-right) ── *@
+ 
     @if (Model.OrderItems != null && Model.OrderItems.Any())
     {
         <a asp-action="Cart" class="btn btn-primary position-relative">
@@ -24,9 +24,7 @@
     }
 </div>
 
-@* ── NO flash messages here — toasts in _Layout.cshtml handle them ── *@
 
-@* ── Product cards ── *@
 <div class="row g-4">
     @foreach (Product product in Model.Products)
     {
@@ -54,10 +52,20 @@
                                 <span class="fw-bold text-primary fs-5">
                                     @product.Price.ToString("C")
                                 </span>
-                                @if (inCart > 0)
-                                {
-                                    <span class="badge bg-success">@inCart in cart</span>
-                                }
+                                <div class="d-flex gap-1 flex-wrap justify-content-end">
+                                    @if (inCart > 0)
+                                    {
+                                        <span class="badge bg-success">@inCart in cart</span>
+                                    }
+                                    @if (product.Stock <= 0)
+                                    {
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                    }
+                                    else if (product.Stock <= 5)
+                                    {
+                                        <span class="badge bg-warning text-dark">Only @product.Stock left!</span>
+                                    }
+                                </div>
                             </div>
 
                             <div class="input-group">
@@ -65,11 +73,14 @@
                                        name="prodQty"
                                        value="1"
                                        min="1"
-                                       max="99"
+                                       max="@(product.Stock > 0 ? Math.Min(product.Stock, 99) : 1)"
                                        class="form-control"
-                                       aria-label="Quantity for @product.Name" />
-                                <button class="btn btn-info text-white" type="submit">
-                                    Add to Cart
+                                       aria-label="Quantity for @product.Name"
+                                       @(product.Stock <= 0 ? "disabled" : "") />
+                                <button class="btn btn-info text-white"
+                                        type="submit"
+                                        @(product.Stock <= 0 ? "disabled" : "")>
+                                    @(product.Stock <= 0 ? "Out of Stock" : "Add to Cart")
                                 </button>
                             </div>
                         </div>
@@ -80,7 +91,6 @@
     }
 </div>
 
-@* ── Sticky bottom bar only when cart has items ── *@
 @if (Model.OrderItems != null && Model.OrderItems.Any())
 {
     <div class="fixed-bottom bg-white border-top shadow p-3 d-flex justify-content-between align-items-center">

@@ -100,7 +100,7 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
 
-                        @* ── Admin-only links ── *@
+                       
                         @if (User.Identity!.IsAuthenticated && User.IsInRole("Admin"))
                         {
                            
@@ -129,8 +129,7 @@
                                asp-controller="Product" asp-action="Index">Menu Items</a>
                         </li>
 
-                        @* ── Cart link — always goes to Create (menu page) for authenticated users ── *@
-                        @* Cart icon in navbar links to Create so user can keep shopping             ── *@
+                       
                         @if (User.Identity!.IsAuthenticated)
                         {
                             var userId = Context.User.FindFirst(
@@ -140,7 +139,7 @@
                             var cartItems = Context.Session.Get<OrderViewModel>(cartKey);
                             var cartCount = cartItems?.OrderItems?.Sum(i => i.Quantity) ?? 0;
 
-                            @* Link to Cart page if items exist, otherwise go to Create (menu) *@
+                            
                             <li class="nav-item">
                                 <a class="nav-link text-dark position-relative"
                                    asp-controller="Order"
