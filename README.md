@@ -1,321 +1,285 @@
-# 🌮 TacoTales
+# 🌮 TacoTales — Restaurant Management System
 
-**A full-featured restaurant management web application built with ASP.NET Core MVC.**
+A full-stack ASP.NET Core MVC web application for managing a restaurant's complete operations: menu management, ingredient tracking, cart, order processing, order status lifecycle, and stock management.
 
-TacoTales is a fictional restaurant platform that handles everything from menu browsing and shopping cart management to order processing and ingredient tracking — all backed by a clean, layered architecture.
+[![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/)
+[![Status](https://img.shields.io/badge/status-live-success.svg)](https://tacotales.runasp.net/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Status](https://img.shields.io/badge/status-active-success.svg)
-
-🌐 **Live Demo**: [tacotales.runasp.net](https://tacotales.runasp.net)
+🔗 **Live Demo**: [https://tacotales.runasp.net](https://tacotales.runasp.net)
 
 ---
 
 ## 📋 Table of Contents
 
-- [Screenshots](#-screenshots)
 - [Features](#-features)
-- [Tech Stack](#️-tech-stack)
+- [Tech Stack](#-tech-stack)
+- [Architecture](#-architecture)
 - [Project Structure](#-project-structure)
-- [Database Schema](#️-database-schema)
+- [Database Schema](#-database-schema)
 - [Getting Started](#-getting-started)
-- [Routes & Endpoints](#-routes--endpoints)
+- [Routes](#-routes)
 - [Security](#-security)
-- [Future Enhancements](#-future-enhancements)
 - [What I Learned](#-what-i-learned)
 
+---
+
+##  Features
+
+### Customer
+- 🛒 **Session-based Cart** — add, update, remove items with quantity validation and toast notifications
+- 📦 **Order Placement** — full checkout with price snapshot, stock verification, and DB persistence
+- 📜 **Order History** — visual 4-step status stepper per order (Pending → Preparing → Ready → Delivered)
+- ❌ **Order Cancellation** — cancel own Pending orders with automatic stock restore
+- 🔐 **Authentication** — secure registration and login via ASP.NET Core Identity
+
+### Admin
+- 🧾 **Order Management Dashboard** — view all orders, filter by status, advance status with single click
+- 🚫 **State Machine Enforcement** — orders can only advance forward; cancellation blocked past Pending
+- 🍽️ **Menu Management** — full CRUD with image uploads stored as binary in DB (survives redeploys)
+- 🥗 **Ingredient Tracking** — manage ingredients linked to products via many-to-many
+- 📊 **Stock Control** — stock decrements on order placement, restores on cancellation
+
+### Technical
+- 🧩 **CartService** — all cart business logic extracted from controller into a dedicated service
+- 👤 **Per-user Session Isolation** — cart key namespaced by `userId` (`Cart_{userId}`) to prevent bleed-over when switching accounts
+- 🔒 **Input Hardening** — every cart action validated before touching the DB (qty range, stock cap, item cap, product existence)
+- 📝 **Structured Logging** — `ILogger<T>` throughout with named parameters on every significant action
+- ⚡ **Async/Await** — all data operations fully asynchronous
 
 ---
 
-## 📸 Screenshots
-
-### 🏠 Home Page
-![Home Page](screenshot-home.png)
-*Landing page with hero section, stats, and featured menu items.*
-
-### 🍽️ Menu Items
-![Menu Items](screenshot-menu.png)
-*Product catalog with images, descriptions, prices, and stock info.*
-
-### 🛒 Create Order
-![Create Order](screenshot-create-order.png)
-*Order creation page — browse items and add quantities to cart.*
-
-### ✅ Add to Cart Notification
-![Add to Cart](screenshot-toast.png)
-*Real-time toast notification when an item is successfully added to cart.*
-
-### 📋 Order History
-![Order History](screenshot-order-history.png)
-*Customer order log with itemized details, dates, and totals. Includes order confirmation toast.*
-
-### 🥗 Admin — Ingredients List
-![Ingredients](screenshot-ingredients.png)
-*Admin view for managing ingredients with full CRUD operations.*
-
-### ⚙️ Admin — Add Menu Item
-![Admin Panel](screenshot-admin.png)
-*Admin form for creating a new product with category and ingredient selection.*
-
----
-
-## ✨ Features
-
-### Customer-Facing
-- 🛒 **Session-based Shopping Cart** — Add, update, and remove items seamlessly
-- 🍽️ **Menu Browsing** — Products organized by categories with images and descriptions
-- 📦 **Order Checkout** — Full order placement flow with confirmation
-- 📜 **Order History** — View past orders with itemized details
-- 🔐 **Authentication** — Secure registration and login via ASP.NET Identity
-
-### Management
-- 📋 **Menu Management** — Full CRUD for products with image uploads
-- 🥗 **Ingredient Tracking** — Manage ingredients and stock levels
-- 🔗 **Product–Ingredient Relations** — Many-to-many recipe management
-- 🏷️ **Category Management** — Appetizer, Entree, Side Dish, Dessert, Beverage
-- 📊 **Inventory Control** — Track stock and availability per product
-
-### Technical Highlights
-- ⚡ **Generic Repository Pattern** — Reusable `Repository<T>` with `QueryOptions<T>` for dynamic filtering and eager loading
-- 🔄 **Custom Session Extensions** — Type-safe cart serialization with JSON
-- 📱 **Responsive UI** — Bootstrap 5 for mobile-friendly design
-- 🎯 **Async/Await** — Fully asynchronous data operations throughout
-
----
-
-## 🛠️ Tech Stack
+##  Tech Stack
 
 | Layer | Technology |
 |---|---|
 | Framework | ASP.NET Core 9.0 MVC |
 | Language | C# 12 |
 | ORM | Entity Framework Core 9.0 |
-| Database | SQL Server 2022 |
-| Authentication | ASP.NET Core Identity |
-| Session | In-memory distributed cache |
+| Database | SQL Server |
+| Auth | ASP.NET Core Identity |
+| Session | Distributed Memory Cache |
 | Frontend | Razor Views, Bootstrap 5, jQuery |
-| IDE | Visual Studio 2022 |
+| Hosting | runasp.net |
 | Version Control | Git & GitHub |
 
 ---
 
-## 📁 Project Structure
+## Architecture
+
+### Layered Structure
+
+```
+HTTP Request
+     │
+     ▼
+Controller (thin — HTTP only, no business logic)
+     │
+     ▼
+CartService (all cart business logic, validation, logging)
+     │
+     ▼
+Repository<T> (generic data access layer)
+     │
+     ▼
+ApplicationDbContext → SQL Server
+```
+
+### Key Design Decisions
+
+**1. CartService Pattern**
+All cart logic lives in `Services/CartService.cs`, not in the controller. The controller calls the service, reads the result, sets TempData, and redirects. This makes the logic testable and keeps controllers thin.
+
+**2. Per-User Session Keys**
+Cart data is stored in session under `Cart_{userId}` rather than a shared key. This prevents cart data persisting across account switches in the same browser — a subtle but real bug in many implementations.
+
+**3. Order Status State Machine**
+`Order.cs` contains the state transition logic directly on the model:
+- `CanAdvance()` — returns true only for non-terminal states
+- `CanCancel()` — only valid from Pending
+- `Advance()` — moves to next state, throws on terminal state
+- `NextStatus()` — preview of next state for button labels
+
+**4. Generic Repository with QueryOptions**
+`Repository<T>` accepts a `QueryOptions<T>` object for dynamic includes, filters, and ordering — avoiding N+1 queries and keeping data access consistent across the app.
+
+**5. Stock Lifecycle**
+- Stock decrements atomically with order placement in `PlaceOrderAsync`
+- Stock restores in `RestoreStockAsync` called by both admin and user cancel paths — single source of truth
+
+---
+
+##  Project Structure
 
 ```
 TacoTales/
 ├── Controllers/
-│   ├── HomeController.cs           # Landing page & menu display
-│   ├── ProductController.cs        # Product CRUD operations
-│   ├── IngredientController.cs     # Ingredient management
-│   └── OrderController.cs          # Cart & order processing
+│   ├── HomeController.cs
+│   ├── ProductController.cs
+│   ├── IngredientController.cs
+│   ├── OrderController.cs        # User-facing order + cart actions
+│   └── AdminOrderController.cs   # Admin order management + status advancement
 │
-├── Data/
-│   └── ApplicationDbContext.cs     # EF Core DbContext with configurations
+├── Services/
+│   └── CartService.cs            # All cart logic, validation, stock, logging
 │
 ├── Models/
-│   ├── Product.cs
-│   ├── Order.cs
+│   ├── Order.cs                  # Includes state machine methods
+│   ├── OrderStatus.cs            # Pending/Preparing/Ready/Delivered/Cancelled enum
 │   ├── OrderItem.cs
-│   ├── Ingredient.cs
+│   ├── OrderViewModel.cs
+│   ├── OrderItemViewModel.cs
+│   ├── Product.cs
 │   ├── Category.cs
-│   ├── ProductIngredient.cs        # Many-to-many junction table
-│   └── Repository.cs               # Generic repository implementation
+│   ├── Ingredient.cs
+│   ├── ProductIngredient.cs
+│   ├── CartValidationResult.cs   # Result object for cart validation
+│   ├── Repository.cs
+│   ├── IRepository.cs
+│   ├── QueryOptions.cs
+│   ├── SessionExtentions.cs
+│   ├── ApplicationUser.cs
+│   └── ErrorViewModel.cs
 │
-├── ViewModels/
-│   ├── ProductViewModel.cs
-│   └── OrderViewModel.cs
+├── Data/
+│   └── ApplicationDbContext.cs
 │
 ├── Views/
 │   ├── Home/
-│   ├── Product/
 │   ├── Order/
+│   │   ├── Create.cshtml         # Menu page with stock badges
+│   │   ├── Cart.cshtml
+│   │   ├── ViewOrders.cshtml     # Status stepper + cancel button
+│   │   └── OrderDetails.cshtml
+│   ├── AdminOrder/
+│   │   ├── Index.cshtml          # Orders dashboard with filter tabs
+│   │   └── Details.cshtml        # Order detail + advance/cancel
+│   ├── Product/
 │   ├── Ingredient/
 │   └── Shared/
-│       ├── _Layout.cshtml
-│       └── Components/
+│       └── _Layout.cshtml        # Toast notifications, per-user cart badge
 │
 └── wwwroot/
     ├── css/
-    ├── js/
-    └── images/
+    └── js/
 ```
 
 ---
 
-## 🗄️ Database Schema
+##  Database Schema
 
 ```
-┌──────────┐         ┌─────────────┐         ┌────────────┐
-│ Category │────────▶│   Product   │◀────────│ Ingredient │
-└──────────┘         └─────────────┘         └────────────┘
-                            │
-                            ▼
-                      ┌───────────┐
-                      │   Order   │
-                      └───────────┘
-                            │
-                            ▼
-                      ┌───────────┐
-                      │ OrderItem │
-                      └───────────┘
+Category ──< Product >── ProductIngredient ──< Ingredient
+                │
+                └──< OrderItem >── Order ──> ApplicationUser
 ```
 
 ### Key Entities
 
-**Product** — `Id`, `Name`, `Description`, `Price`, `Stock`, `ImagePath`, `CategoryId`  
-**Order** — `Id`, `OrderDate`, `TotalAmount`, `UserId`, `Status`  
-**OrderItem** — `Id`, `OrderId`, `ProductId`, `Quantity`, `Price`  
-**Ingredient** — `Id`, `Name`, `StockQuantity`, `Unit`  
-**Category** — `Id`, `Name`
+| Entity | Key Fields |
+|---|---|
+| Product | ProductId, Name, Price, Stock, CategoryId, ImageData |
+| Order | OrderId, UserId, OrderDate, TotalAmount, Status |
+| OrderItem | OrderItemId, OrderId, ProductId, Quantity, Price (snapshot) |
+| Category | CategoryId, Name |
+| Ingredient | IngredientId, Name, Stock |
 
-### Seed Data
-
-The app ships with seed data for realistic testing:
-- **5 Categories**: Appetizer, Entree, Side Dish, Dessert, Beverage
-- **6 Ingredients**: Beef, Chicken, Fish, Tortilla, Lettuce, Tomato
-- **3 Products**: Beef Taco, Chicken Taco, Fish Taco (with images and ingredient relationships)
+> Note: `OrderItem.Price` is snapshotted at order time — price changes after ordering don't affect existing orders.
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
+- .NET 9.0 SDK
+- SQL Server (Express or full)
+- Visual Studio 2022
 
-- [.NET 9.0 SDK](https://dotnet.microsoft.com/download)
-- SQL Server 2019+ (or SQL Server Express / LocalDB)
-- Visual Studio 2022, VS Code, or JetBrains Rider
+### Setup
 
-### Installation
+```bash
+# 1. Clone
+git clone https://github.com/bassant-salem/TacoTales.git
+cd TacoTales
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/bassant-salem/TacoTales.git
-   cd TacoTales
-   ```
+# 2. Update connection string in appsettings.json
+# "DefaultConnection": "Server=...;Database=TacoTalesDB;..."
 
-2. **Configure the database connection**  
-   Edit `appsettings.json`:
-   ```json
-   {
-     "ConnectionStrings": {
-       "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=TacoTalesDB;Trusted_Connection=True;MultipleActiveResultSets=true"
-     }
-   }
-   ```
+# 3. Apply migrations
+dotnet ef database update
 
-3. **Apply migrations and seed data**
-   ```bash
-   dotnet ef database update
-   ```
-   > If migrations don't exist yet:
-   > ```bash
-   > dotnet ef migrations add InitialCreate
-   > dotnet ef database update
-   > ```
+# 4. Run
+dotnet run
+```
 
-4. **Run the app**
-   ```bash
-   dotnet run
-   ```
-
-5. **Open in browser**  
-   Navigate to `https://localhost:5001` or `http://localhost:5000`
-
-### Quick Test
-
-1. Browse the menu as a guest
-2. Register a new account
-3. Add items to your cart
-4. Place an order and view your order history
-5. Log in with an admin account to manage products and ingredients
+### Default Admin Account
+The database seeder creates an admin account on first run.
+Check `Data/DbSeeder.cs` for credentials (do not commit real credentials to public repos).
 
 ---
 
-## 📡 Routes & Endpoints
+##  Routes
 
-### Public
-
-| Method | Route | Description |
-|---|---|---|
-| GET | `/` | Homepage with featured products |
-| GET | `/Product` | Full menu listing |
-| GET | `/Product/Details/{id}` | Product detail page |
-
-### Orders (Authenticated)
+### Customer (Authenticated)
 
 | Method | Route | Description |
 |---|---|---|
-| GET | `/Order/Cart` | View shopping cart |
-| POST | `/Order/AddItem` | Add product to cart |
-| POST | `/Order/UpdateCart` | Update item quantities |
-| POST | `/Order/RemoveItem` | Remove item from cart |
-| POST | `/Order/PlaceOrder` | Submit order |
-| GET | `/Order/ViewOrders` | Order history |
+| GET | `/Order/Create` | Menu page with stock badges |
+| POST | `/Order/AddItem` | Add to cart with full validation |
+| GET | `/Order/Cart` | View cart |
+| POST | `/Order/UpdateQuantity` | Update item quantity |
+| POST | `/Order/RemoveItem` | Remove item |
+| POST | `/Order/PlaceOrder` | Checkout — decrements stock |
+| GET | `/Order/ViewOrders` | Order history with status stepper |
 | GET | `/Order/OrderDetails/{id}` | Single order detail |
+| POST | `/Order/CancelOrder/{id}` | Cancel Pending order + restore stock |
 
-### Admin (Authorized)
+### Admin Only
 
 | Method | Route | Description |
 |---|---|---|
-| GET | `/Product/AddEdit/{id?}` | Add or edit product |
-| POST | `/Product/AddEdit` | Save product changes |
+| GET | `/AdminOrder` | Orders dashboard with status filter |
+| POST | `/AdminOrder/Advance/{id}` | Advance order status (state machine) |
+| POST | `/AdminOrder/Cancel/{id}` | Cancel order + restore stock |
+| GET | `/AdminOrder/Details/{id}` | Order detail with advance/cancel controls |
+| GET/POST | `/Product/AddEdit` | Add or edit menu item |
 | POST | `/Product/Delete/{id}` | Delete product |
-| GET | `/Ingredient` | List all ingredients |
-| GET/POST | `/Ingredient/Create` | Create ingredient |
-| GET/POST | `/Ingredient/Edit/{id}` | Edit ingredient |
-| GET/POST | `/Ingredient/Delete/{id}` | Delete ingredient |
+| GET/POST | `/Ingredient/...` | Full ingredient CRUD |
 
 ---
 
-## 🔐 Security
+##  Security
 
-- **ASP.NET Core Identity** for password hashing and user management
-- **Anti-Forgery Tokens** (CSRF protection) on all POST requests
-- **Role-Based Authorization** for admin-only routes
-- **Server-Side Validation** via data annotations
-- **SQL Injection Prevention** through EF Core parameterized queries
-- **HTTPS Enforcement** in production
-
----
-
-## 🔮 Future Enhancements
-
-### High Priority
-- 💳 Payment integration (Stripe / PayPal)
-- 📬 Email notifications for order confirmations
-- 📊 Admin dashboard with sales analytics
-- 🔄 Real-time order status tracking (Pending → Preparing → Ready → Delivered)
-- ⭐ Customer reviews and ratings
-
-### Technical Improvements
-- 🧪 Unit tests with xUnit
-- 🐳 Docker containerization
-- ⚡ Redis caching layer
-- 📋 Structured logging with Serilog
-- 🔁 CI/CD pipeline
+- **CSRF Protection** — `[ValidateAntiForgeryToken]` on every POST
+- **Role-Based Authorization** — `[Authorize(Roles = "Admin")]` on all admin routes
+- **Ownership Checks** — users cannot view or cancel other users' orders (returns 403)
+- **Input Validation** — all cart inputs validated server-side before DB access
+- **SQL Injection Prevention** — parameterized queries via EF Core
+- **HTTPS** — enforced in production
 
 ---
 
-## 📚 What I Learned
+##  What I Learned
 
-- **Entity Framework Core** — Code-first migrations, fluent API configuration, eager loading with `Include()`, and many-to-many relationships
-- **Generic Repository Pattern** — Built a flexible `Repository<T>` with `QueryOptions<T>` to avoid N+1 query problems
-- **Session Management** — Custom extensions for type-safe JSON serialization of cart objects
-- **Dependency Injection** — Applied throughout the app following SOLID principles
-- **File Uploads** — Unique filename generation with fallback placeholder images
-- **Clean Architecture** — Separation of concerns across controllers, repositories, models, and ViewModels
+### Patterns & Architecture
+- Extracting business logic from controllers into a dedicated service class (`CartService`) — keeping controllers as thin HTTP handlers
+- Implementing a **state machine** directly on a domain model (`Order.CanAdvance()`, `Order.Advance()`) for enforced, predictable transitions
+- Using a `CartValidationResult` result object instead of exceptions for control flow in validation paths
+- Generic repository with `QueryOptions<T>` for flexible, reusable data access without repeating query logic
 
----
+### ASP.NET Core Specifics
+- Session isolation per user using namespaced keys — preventing subtle cart bleed-over bugs across accounts
+- `IHttpContextAccessor` for accessing session outside of controllers
+- `ILogger<T>` structured logging with named parameters throughout service and controller layers
+- `[ValidateAntiForgeryToken]` and ownership checks as defense-in-depth on every sensitive action
 
-## 🤝 Contributing
+### Entity Framework Core
+- Snapshotting prices at order time so price changes don't retroactively affect past orders
+- Optimistic stock decrement — trading strict consistency for simplicity, appropriate for this scale
+- `ThenInclude` for multi-level eager loading (`OrderItems.Product`)
+- Code-First migrations for schema evolution
 
-This is a personal learning project, but suggestions are welcome!
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Commit your changes: `git commit -m 'Add your feature'`
-4. Push to the branch: `git push origin feature/your-feature`
-5. Open a Pull Request
-
-
+### Real-World Problem Solving
+- Per-user session cart keys to fix account-switching bug
+- Stock restore on cancellation as a single shared method called by both admin and user cancel paths
+- Toast notifications in `_Layout.cshtml` as the single source of user feedback — removing duplicate inline alerts from views
