@@ -24,7 +24,22 @@ A full-stack ASP.NET Core MVC web application for managing a restaurant's comple
 
 ---
 
-##  Features
+## 📸 Screenshots
+
+| | |
+|---|---|
+| ![Home Page](screenshots/home.png) | ![Menu Items](screenshots/menu-items.png) |
+| *Landing page — guest view* | *Public menu with stock levels* |
+| ![Create Order](screenshots/create-order.png) | ![Cart](screenshots/cart.png) |
+| *Order page — cart badge, "in cart" badges, toast notification* | *Cart with quantities, subtotals and Place Order* |
+| ![My Orders](screenshots/my-orders.png) | ![Manage Orders](screenshots/manage-orders.png) |
+| *Customer order history with 4-step status stepper and cancel button* | *Admin dashboard — filter by status, advance with one click* |
+| ![Admin Order Details](screenshots/admin-order-details.png) | ![Add Menu Item](screenshots/add-menu-item.png) |
+| *Admin detail view — stepper + Mark as Ready button* | *Admin product form — categories, ingredients, image upload* |
+
+---
+
+## ✨ Features
 
 ### Customer
 - 🛒 **Session-based Cart** — add, update, remove items with quantity validation and toast notifications
@@ -49,7 +64,7 @@ A full-stack ASP.NET Core MVC web application for managing a restaurant's comple
 
 ---
 
-##  Tech Stack
+## 🛠️ Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -65,7 +80,7 @@ A full-stack ASP.NET Core MVC web application for managing a restaurant's comple
 
 ---
 
-## Architecture
+## 🏗️ Architecture
 
 ### Layered Structure
 
@@ -109,7 +124,7 @@ Cart data is stored in session under `Cart_{userId}` rather than a shared key. T
 
 ---
 
-##  Project Structure
+## 📁 Project Structure
 
 ```
 TacoTales/
@@ -166,7 +181,7 @@ TacoTales/
 
 ---
 
-##  Database Schema
+## 🗄️ Database Schema
 
 ```
 Category ──< Product >── ProductIngredient ──< Ingredient
@@ -188,7 +203,7 @@ Category ──< Product >── ProductIngredient ──< Ingredient
 
 ---
 
-##  Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 - .NET 9.0 SDK
@@ -218,7 +233,7 @@ Check `Data/DbSeeder.cs` for credentials (do not commit real credentials to publ
 
 ---
 
-##  Routes
+## 📡 Routes
 
 ### Customer (Authenticated)
 
@@ -248,7 +263,7 @@ Check `Data/DbSeeder.cs` for credentials (do not commit real credentials to publ
 
 ---
 
-##  Security
+## 🔐 Security
 
 - **CSRF Protection** — `[ValidateAntiForgeryToken]` on every POST
 - **Role-Based Authorization** — `[Authorize(Roles = "Admin")]` on all admin routes
@@ -259,7 +274,7 @@ Check `Data/DbSeeder.cs` for credentials (do not commit real credentials to publ
 
 ---
 
-##  What I Learned
+## 📚 What I Learned
 
 ### Patterns & Architecture
 - Extracting business logic from controllers into a dedicated service class (`CartService`) — keeping controllers as thin HTTP handlers
