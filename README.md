@@ -30,7 +30,7 @@ A full-stack ASP.NET Core MVC web application for managing a restaurant's comple
 |---|---|
 | ![Home Page](home.webp) | ![Menu Items](menu-items.webp) |
 | *Landing page — guest view* | *Public menu with stock levels* |
-| ![Create Order](create-orde.webp) | ![Cart](cart.webp) |
+| ![Create Order](create-order.webp) | ![Cart](cart.webp) |
 | *Order page — cart badge, "in cart" badges, toast notification* | *Cart with quantities, subtotals and Place Order* |
 | ![My Orders](my-orders.webp) | ![Manage Orders](manage-orders.webp) |
 | *Customer order history with 4-step status stepper and cancel button* | *Admin dashboard — filter by status, advance with one click* |
