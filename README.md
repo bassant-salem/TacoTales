@@ -10,7 +10,7 @@ A full-stack ASP.NET Core MVC web application for managing a restaurant's comple
 
 ---
 
-## 📋 Table of Contents
+##  Table of Contents
 
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
@@ -24,47 +24,47 @@ A full-stack ASP.NET Core MVC web application for managing a restaurant's comple
 
 ---
 
-## 📸 Screenshots
+##  Screenshots
 
 | | |
 |---|---|
-| ![Home Page](screenshots/home.png) | ![Menu Items](screenshots/menu-items.png) |
+| ![Home Page](home.webp) | ![Menu Items](menu-items.webp) |
 | *Landing page — guest view* | *Public menu with stock levels* |
-| ![Create Order](screenshots/create-order.png) | ![Cart](screenshots/cart.png) |
+| ![Create Order](create-orde.webp) | ![Cart](cart.webp) |
 | *Order page — cart badge, "in cart" badges, toast notification* | *Cart with quantities, subtotals and Place Order* |
-| ![My Orders](screenshots/my-orders.png) | ![Manage Orders](screenshots/manage-orders.png) |
+| ![My Orders](my-orders.webp) | ![Manage Orders](manage-orders.webp) |
 | *Customer order history with 4-step status stepper and cancel button* | *Admin dashboard — filter by status, advance with one click* |
-| ![Admin Order Details](screenshots/admin-order-details.png) | ![Add Menu Item](screenshots/add-menu-item.png) |
+| ![Admin Order Details](admin-order-details.webp) | ![Add Menu Item](add-menu-item.webp) |
 | *Admin detail view — stepper + Mark as Ready button* | *Admin product form — categories, ingredients, image upload* |
 
 ---
 
-## ✨ Features
+##  Features
 
 ### Customer
-- 🛒 **Session-based Cart** — add, update, remove items with quantity validation and toast notifications
-- 📦 **Order Placement** — full checkout with price snapshot, stock verification, and DB persistence
-- 📜 **Order History** — visual 4-step status stepper per order (Pending → Preparing → Ready → Delivered)
-- ❌ **Order Cancellation** — cancel own Pending orders with automatic stock restore
-- 🔐 **Authentication** — secure registration and login via ASP.NET Core Identity
+-  **Session-based Cart** — add, update, remove items with quantity validation and toast notifications
+-  **Order Placement** — full checkout with price snapshot, stock verification, and DB persistence
+-  **Order History** — visual 4-step status stepper per order (Pending → Preparing → Ready → Delivered)
+-  **Order Cancellation** — cancel own Pending orders with automatic stock restore
+-  **Authentication** — secure registration and login via ASP.NET Core Identity
 
 ### Admin
-- 🧾 **Order Management Dashboard** — view all orders, filter by status, advance status with single click
-- 🚫 **State Machine Enforcement** — orders can only advance forward; cancellation blocked past Pending
-- 🍽️ **Menu Management** — full CRUD with image uploads stored as binary in DB (survives redeploys)
-- 🥗 **Ingredient Tracking** — manage ingredients linked to products via many-to-many
-- 📊 **Stock Control** — stock decrements on order placement, restores on cancellation
+-  **Order Management Dashboard** — view all orders, filter by status, advance status with single click
+-  **State Machine Enforcement** — orders can only advance forward; cancellation blocked past Pending
+-  **Menu Management** — full CRUD with image uploads stored as binary in DB (survives redeploys)
+-  **Ingredient Tracking** — manage ingredients linked to products via many-to-many
+-  **Stock Control** — stock decrements on order placement, restores on cancellation
 
 ### Technical
-- 🧩 **CartService** — all cart business logic extracted from controller into a dedicated service
-- 👤 **Per-user Session Isolation** — cart key namespaced by `userId` (`Cart_{userId}`) to prevent bleed-over when switching accounts
-- 🔒 **Input Hardening** — every cart action validated before touching the DB (qty range, stock cap, item cap, product existence)
-- 📝 **Structured Logging** — `ILogger<T>` throughout with named parameters on every significant action
-- ⚡ **Async/Await** — all data operations fully asynchronous
+-  **CartService** — all cart business logic extracted from controller into a dedicated service
+-  **Per-user Session Isolation** — cart key namespaced by `userId` (`Cart_{userId}`) to prevent bleed-over when switching accounts
+-  **Input Hardening** — every cart action validated before touching the DB (qty range, stock cap, item cap, product existence)
+-  **Structured Logging** — `ILogger<T>` throughout with named parameters on every significant action
+-  **Async/Await** — all data operations fully asynchronous
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -80,7 +80,7 @@ A full-stack ASP.NET Core MVC web application for managing a restaurant's comple
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ### Layered Structure
 
@@ -124,7 +124,7 @@ Cart data is stored in session under `Cart_{userId}` rather than a shared key. T
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 TacoTales/
@@ -203,7 +203,7 @@ Category ──< Product >── ProductIngredient ──< Ingredient
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 - .NET 9.0 SDK
@@ -233,7 +233,7 @@ Check `Data/DbSeeder.cs` for credentials (do not commit real credentials to publ
 
 ---
 
-## 📡 Routes
+##  Routes
 
 ### Customer (Authenticated)
 
@@ -263,7 +263,7 @@ Check `Data/DbSeeder.cs` for credentials (do not commit real credentials to publ
 
 ---
 
-## 🔐 Security
+##  Security
 
 - **CSRF Protection** — `[ValidateAntiForgeryToken]` on every POST
 - **Role-Based Authorization** — `[Authorize(Roles = "Admin")]` on all admin routes
@@ -274,7 +274,7 @@ Check `Data/DbSeeder.cs` for credentials (do not commit real credentials to publ
 
 ---
 
-## 📚 What I Learned
+##  What I Learned
 
 ### Patterns & Architecture
 - Extracting business logic from controllers into a dedicated service class (`CartService`) — keeping controllers as thin HTTP handlers
